@@ -57,10 +57,15 @@ async def create_incident(
     return {"id": incident_id, "message": "Incident created successfully"}
   except ValueError as e:
     await session.rollback()
+    import traceback
+    traceback.print_exc()
     raise HTTPException(status_code=400, detail=str(e))
   except Exception as e:
     await session.rollback()
-    raise HTTPException(status_code=500, detail=str(e))
+    import traceback
+    traceback.print_exc()
+    print(f"[ERROR] Create incident failed: {str(e)}")
+    raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
