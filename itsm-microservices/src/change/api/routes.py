@@ -134,55 +134,52 @@ async def list_changes(
   risk_level: Optional[str] = Query(None),
   limit: int = Query(100, ge=1, le=1000),
   offset: int = Query(0, ge=0),
+  session: AsyncSession = Depends(get_session),
 ):
   try:
-    mock_changes = [
+    repository = ChangeRequestRepository(session)
+    handler = ListChangesQueryHandler(repository)
+
+    query = ListChangesQuery(
+      status=status,
+      risk_level=risk_level,
+      limit=limit,
+      offset=offset,
+    )
+    result = await handler.handle(query)
+
+    changes = [
       ChangeResponse(
-        id="CHG-001",
-        title="Upgrade Database to v14",
-        description="Upgrade production database to latest version",
-        change_type="STANDARD",
-        status="APPROVED",
-        risk_level="HIGH",
-        impact_assessment="Medium impact on performance during upgrade window",
-        rollback_plan="Restore from backup if issues occur",
-        implementation_schedule="2024-07-15T02:00:00Z",
-        created_by="admin@company.com",
-        created_at="2024-07-08T10:00:00Z",
-        updated_at="2024-07-10T12:30:00Z",
-        implemented_at=None,
-        rolled_back_at=None,
+        id=change.change_id,
+        title=change.title.value,
+        description=change.description.value,
+        change_type=change.change_type,
+        status=change.status,
+        risk_level=change.risk_level,
+        impact_assessment=change.impact_assessment,
+        rollback_plan=change.rollback_plan,
+        implementation_schedule=change.implementation_schedule,
+        created_by=str(change.created_by),
+        created_at=change.created_at.value,
+        updated_at=change.updated_at.value,
+        implemented_at=change.implemented_at,
+        rolled_back_at=change.rolled_back_at,
         approvals=[
           ApprovalInfo(
-            approver_id="manager@company.com",
-            status="APPROVED",
-            comments="Approved for implementation",
-            approved_at="2024-07-09T15:00:00Z",
+            approver_id=a["approver_id"],
+            status=a["status"],
+            comments=a.get("comments"),
+            approved_at=a.get("approved_at", ""),
           )
+          for a in change.approvals
         ],
-      ),
-      ChangeResponse(
-        id="CHG-002",
-        title="Deploy API v2.1.0",
-        description="Deploy new API version with performance improvements",
-        change_type="STANDARD",
-        status="SUBMITTED",
-        risk_level="MEDIUM",
-        impact_assessment="Low impact, backward compatible",
-        rollback_plan="Revert to v2.0.5",
-        implementation_schedule="2024-07-12T10:00:00Z",
-        created_by="admin@company.com",
-        created_at="2024-07-10T09:00:00Z",
-        updated_at="2024-07-10T14:00:00Z",
-        implemented_at=None,
-        rolled_back_at=None,
-        approvals=[],
-      ),
+      )
+      for change in result.get("changes", [])
     ]
-    
+
     return ChangeListResponse(
-      changes=mock_changes[offset:offset+limit],
-      total=len(mock_changes),
+      changes=changes,
+      total=result.get("total", 0),
       limit=limit,
       offset=offset,
     )

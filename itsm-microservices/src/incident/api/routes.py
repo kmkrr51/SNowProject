@@ -106,59 +106,43 @@ async def list_incidents(
   assigned_to: Optional[str] = Query(None),
   limit: int = Query(100, ge=1, le=1000),
   offset: int = Query(0, ge=0),
+  session: AsyncSession = Depends(get_session),
 ):
   try:
-    mock_incidents = [
+    repository = await get_incident_repository(session)
+    handler = await get_list_incidents_handler(repository)
+
+    query = ListIncidentsQuery(
+      status=status,
+      priority=priority,
+      assigned_to=assigned_to,
+      limit=limit,
+      offset=offset,
+    )
+    result = await handler.handle(query)
+
+    incidents = [
       IncidentResponse(
-        id="INC-001",
-        title="Database Connection Failed",
-        description="Production database is not responding to queries",
-        priority="CRITICAL",
-        status="OPEN",
-        impact_level="HIGH",
-        urgency_level="URGENT",
-        assigned_to="john.doe@company.com",
-        created_by="admin@company.com",
-        created_at="2024-07-10T10:30:00Z",
-        updated_at="2024-07-10T14:20:00Z",
-        resolved_at=None,
-        closed_at=None,
-      ),
-      IncidentResponse(
-        id="INC-002",
-        title="API Response Timeout",
-        description="API endpoint /api/v1/users is timing out",
-        priority="HIGH",
-        status="IN_PROGRESS",
-        impact_level="MEDIUM",
-        urgency_level="HIGH",
-        assigned_to="jane.smith@company.com",
-        created_by="admin@company.com",
-        created_at="2024-07-09T15:45:00Z",
-        updated_at="2024-07-10T09:15:00Z",
-        resolved_at=None,
-        closed_at=None,
-      ),
-      IncidentResponse(
-        id="INC-003",
-        title="Email Service Down",
-        description="Email notifications are not being sent",
-        priority="MEDIUM",
-        status="RESOLVED",
-        impact_level="MEDIUM",
-        urgency_level="MEDIUM",
-        assigned_to="bob.wilson@company.com",
-        created_by="admin@company.com",
-        created_at="2024-07-08T08:00:00Z",
-        updated_at="2024-07-10T11:30:00Z",
-        resolved_at="2024-07-10T11:30:00Z",
-        closed_at=None,
-      ),
+        id=str(incident.incident_id),
+        title=incident.title.value,
+        description=incident.description.value,
+        priority=incident.priority.value,
+        status=incident.status.value,
+        impact_level=incident.impact_level.value,
+        urgency_level=incident.urgency_level.value,
+        assigned_to=str(incident.assigned_to) if incident.assigned_to else None,
+        created_by=str(incident.created_by),
+        created_at=incident.created_at.value,
+        updated_at=incident.updated_at.value,
+        resolved_at=incident.resolved_at,
+        closed_at=incident.closed_at,
+      )
+      for incident in result.get("incidents", [])
     ]
-    
+
     return IncidentListResponse(
-      incidents=mock_incidents[offset:offset+limit],
-      total=len(mock_incidents),
+      incidents=incidents,
+      total=result.get("total", 0),
       limit=limit,
       offset=offset,
     )

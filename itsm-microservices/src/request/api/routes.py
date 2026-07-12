@@ -132,80 +132,56 @@ async def list_service_requests(
   assigned_to: Optional[str] = Query(None),
   limit: int = Query(100, ge=1, le=1000),
   offset: int = Query(0, ge=0),
+  session: AsyncSession = Depends(get_session),
 ):
   try:
-    mock_requests = [
+    repository = ServiceRequestRepository(session)
+    handler = ListServiceRequestsQueryHandler(repository)
+
+    query = ListServiceRequestsQuery(
+      status=status,
+      priority=priority,
+      requester=requester,
+      assigned_to=assigned_to,
+      limit=limit,
+      offset=offset,
+    )
+    result = await handler.handle(query)
+
+    requests = [
       ServiceRequestResponse(
-        id="REQ-001",
-        request_type="HARDWARE",
-        title="New Laptop Request",
-        description="Request for new laptop for new team member",
-        status="FULFILLED",
-        requester="john.doe@company.com",
-        requested_service="Hardware Procurement",
-        priority="MEDIUM",
-        assigned_to="it.support@company.com",
-        fulfillment_details="Laptop delivered on 2024-07-10",
+        id=req.request_id,
+        request_type=req.request_type,
+        title=req.title.value,
+        description=req.description.value,
+        status=req.status,
+        requester=str(req.requester),
+        requested_service=req.requested_service,
+        priority=req.priority,
+        assigned_to=req.assigned_to,
+        fulfillment_details=req.fulfillment_details,
         tasks=[
           TaskInfo(
-            name="Approve Request",
-            description="Manager approval",
-            status="COMPLETED",
-            created_at="2024-07-08T10:00:00Z",
-            completed_at="2024-07-08T11:00:00Z",
-          ),
-          TaskInfo(
-            name="Procure Hardware",
-            description="Order laptop from vendor",
-            status="COMPLETED",
-            created_at="2024-07-08T11:00:00Z",
-            completed_at="2024-07-10T09:00:00Z",
-          ),
+            name=t["name"],
+            description=t["description"],
+            status=t["status"],
+            created_at=t["created_at"],
+            completed_at=t.get("completed_at"),
+          )
+          for t in req.tasks
         ],
-        created_at="2024-07-08T10:00:00Z",
-        updated_at="2024-07-10T14:00:00Z",
-        fulfilled_at="2024-07-10T14:00:00Z",
-        closed_at=None,
-        progress=100,
-      ),
-      ServiceRequestResponse(
-        id="REQ-002",
-        request_type="SOFTWARE",
-        title="License for Adobe Creative Suite",
-        description="Request for Adobe Creative Suite license",
-        status="IN_PROGRESS",
-        requester="jane.smith@company.com",
-        requested_service="Software Licensing",
-        priority="HIGH",
-        assigned_to="it.support@company.com",
-        fulfillment_details="License procurement in progress",
-        tasks=[
-          TaskInfo(
-            name="Approve Request",
-            description="Manager approval",
-            status="COMPLETED",
-            created_at="2024-07-09T10:00:00Z",
-            completed_at="2024-07-09T11:00:00Z",
-          ),
-          TaskInfo(
-            name="Purchase License",
-            description="Buy license from Adobe",
-            status="IN_PROGRESS",
-            created_at="2024-07-09T11:00:00Z",
-            completed_at=None,
-          ),
-        ],
-        created_at="2024-07-09T10:00:00Z",
-        updated_at="2024-07-10T13:00:00Z",
-        fulfilled_at=None,
-        closed_at=None,
-        progress=50,
-      ),
+        created_at=req.created_at.value,
+        updated_at=req.updated_at.value,
+        fulfilled_at=req.fulfilled_at,
+        closed_at=req.closed_at,
+        progress=req.get_progress(),
+      )
+      for req in result.get("requests", [])
     ]
-    
+
     return ServiceRequestListResponse(
-      requests=mock_requests[offset:offset+limit],
-      total=len(mock_requests),
+      requests=requests,
+      total=result.get("total", 0),
       limit=limit,
       offset=offset,
     )

@@ -123,40 +123,39 @@ async def list_problems(
   status: Optional[str] = Query(None),
   limit: int = Query(100, ge=1, le=1000),
   offset: int = Query(0, ge=0),
+  session: AsyncSession = Depends(get_session),
 ):
   try:
-    mock_problems = [
+    repository = ProblemRepository(session)
+    handler = ListProblemsQueryHandler(repository)
+
+    query = ListProblemsQuery(
+      status=status,
+      limit=limit,
+      offset=offset,
+    )
+    result = await handler.handle(query)
+
+    problems = [
       ProblemResponse(
-        id="PRB-001",
-        title="High CPU Usage on Server",
-        description="Server experiencing sustained high CPU usage affecting performance",
-        status="OPEN",
-        root_cause=None,
-        created_by="admin@company.com",
-        created_at="2024-07-10T09:00:00Z",
-        updated_at="2024-07-10T14:00:00Z",
-        resolved_at=None,
-        related_incidents=["INC-001", "INC-002"],
-        impacted_services=["API Service", "Web Portal"],
-      ),
-      ProblemResponse(
-        id="PRB-002",
-        title="Memory Leak in Payment Module",
-        description="Payment processing module showing signs of memory leak",
-        status="IN_INVESTIGATION",
-        root_cause=None,
-        created_by="admin@company.com",
-        created_at="2024-07-09T11:30:00Z",
-        updated_at="2024-07-10T13:45:00Z",
-        resolved_at=None,
-        related_incidents=["INC-003"],
-        impacted_services=["Payment Service"],
-      ),
+        id=problem.problem_id,
+        title=problem.title.value,
+        description=problem.description.value,
+        status=problem.status.value,
+        root_cause=problem.root_cause,
+        created_by=str(problem.created_by),
+        created_at=problem.created_at.value,
+        updated_at=problem.updated_at.value,
+        resolved_at=problem.resolved_at,
+        related_incidents=problem.related_incidents,
+        impacted_services=problem.impacted_services,
+      )
+      for problem in result.get("problems", [])
     ]
-    
+
     return ProblemListResponse(
-      problems=mock_problems[offset:offset+limit],
-      total=len(mock_problems),
+      problems=problems,
+      total=result.get("total", 0),
       limit=limit,
       offset=offset,
     )
