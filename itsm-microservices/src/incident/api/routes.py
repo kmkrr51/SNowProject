@@ -33,7 +33,7 @@ from ..application.queries import ListIncidentsQuery, GetIncidentQuery
 router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
 
 
-@router.post("", response_model=dict, status_code=201)
+@router.post("", response_model=IncidentResponse, status_code=201)
 async def create_incident(
   request: CreateIncidentRequest,
   session: AsyncSession = Depends(get_session),
@@ -54,7 +54,28 @@ async def create_incident(
     incident_id = await handler.handle(command)
     await session.commit()
 
-    return {"id": incident_id, "message": "Incident created successfully"}
+    get_handler = await get_get_incident_handler(repository)
+    get_query = GetIncidentQuery(incident_id=incident_id)
+    incident = await get_handler.handle(get_query)
+
+    if not incident:
+      raise HTTPException(status_code=500, detail="Failed to retrieve created incident")
+
+    return IncidentResponse(
+      id=str(incident.incident_id),
+      title=incident.title.value,
+      description=incident.description.value,
+      priority=incident.priority.value,
+      status=incident.status.value,
+      impact_level=incident.impact_level.value,
+      urgency_level=incident.urgency_level.value,
+      assigned_to=str(incident.assigned_to) if incident.assigned_to else None,
+      created_by=str(incident.created_by),
+      created_at=incident.created_at.value,
+      updated_at=incident.updated_at.value,
+      resolved_at=incident.resolved_at,
+      closed_at=incident.closed_at,
+    )
   except ValueError as e:
     await session.rollback()
     raise HTTPException(status_code=400, detail=str(e))

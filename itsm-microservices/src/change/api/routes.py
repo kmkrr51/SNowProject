@@ -51,7 +51,7 @@ async def get_session():
     yield session
 
 
-@router.post("", response_model=dict, status_code=201)
+@router.post("", response_model=ChangeResponse, status_code=201)
 async def create_change(
   request: CreateChangeRequest,
   session: AsyncSession = Depends(get_session),
@@ -71,7 +71,40 @@ async def create_change(
     change_id = await handler.handle(command)
     await session.commit()
 
-    return {"id": change_id, "message": "Change created successfully"}
+    get_handler = GetChangeQueryHandler(repository)
+    get_query = GetChangeQuery(change_id=change_id)
+    change = await get_handler.handle(get_query)
+
+    if not change:
+      raise HTTPException(status_code=500, detail="Failed to retrieve created change")
+
+    approvals = [
+      ApprovalInfo(
+        approver_id=a["approver_id"],
+        status=a["status"],
+        comments=a.get("comments"),
+        approved_at=a.get("approved_at", ""),
+      )
+      for a in change.approvals
+    ]
+
+    return ChangeResponse(
+      id=change.change_id,
+      title=change.title.value,
+      description=change.description.value,
+      change_type=change.change_type,
+      status=change.status,
+      risk_level=change.risk_level,
+      impact_assessment=change.impact_assessment,
+      rollback_plan=change.rollback_plan,
+      implementation_schedule=change.implementation_schedule,
+      created_by=str(change.created_by),
+      created_at=change.created_at.value,
+      updated_at=change.updated_at.value,
+      implemented_at=change.implemented_at,
+      rolled_back_at=change.rolled_back_at,
+      approvals=approvals,
+    )
   except ValueError as e:
     await session.rollback()
     raise HTTPException(status_code=400, detail=str(e))
