@@ -166,6 +166,7 @@ async def seed_database():
     await session.flush()
     print("[OK] Ensured 5 incidents")
 
+    existing_notes = {note.id for note in (await session.execute(__import__('sqlalchemy').select(WorkNoteModel))).scalars().all()}
     work_notes = [
       WorkNoteModel(
         id="note_001",
@@ -186,10 +187,13 @@ async def seed_database():
         content="Checking database query performance",
       ),
     ]
-    session.add_all(work_notes)
+    for note in work_notes:
+      if note.id not in existing_notes:
+        session.add(note)
     await session.flush()
-    print("[OK] Created 3 work notes")
+    print("[OK] Ensured 3 work notes")
 
+    existing_problems = {prob.id for prob in (await session.execute(__import__('sqlalchemy').select(ProblemModel))).scalars().all()}
     problems = [
       ProblemModel(
         id="prob_001",
@@ -226,10 +230,13 @@ async def seed_database():
         impacted_services="Dashboard",
       ),
     ]
-    session.add_all(problems)
+    for problem in problems:
+      if problem.id not in existing_problems:
+        session.add(problem)
     await session.flush()
-    print("[OK] Created 3 problems")
+    print("[OK] Ensured 3 problems")
 
+    existing_rca = {rca.id for rca in (await session.execute(__import__('sqlalchemy').select(RCARecordModel))).scalars().all()}
     rca_records = [
       RCARecordModel(
         id="rca_001",
@@ -246,10 +253,13 @@ async def seed_database():
         timeline="Gradual memory increase over 2 weeks",
       ),
     ]
-    session.add_all(rca_records)
+    for rca in rca_records:
+      if rca.id not in existing_rca:
+        session.add(rca)
     await session.flush()
-    print("[OK] Created 2 RCA records")
+    print("[OK] Ensured 2 RCA records")
 
+    existing_errors = {err.id for err in (await session.execute(__import__('sqlalchemy').select(KnownErrorModel))).scalars().all()}
     known_errors = [
       KnownErrorModel(
         id="ke_001",
@@ -268,10 +278,13 @@ async def seed_database():
         status="RESOLVED",
       ),
     ]
-    session.add_all(known_errors)
+    for err in known_errors:
+      if err.id not in existing_errors:
+        session.add(err)
     await session.flush()
-    print("[OK] Created 2 known errors")
+    print("[OK] Ensured 2 known errors")
 
+    existing_changes = {chg.id for chg in (await session.execute(__import__('sqlalchemy').select(ChangeRequestModel))).scalars().all()}
     changes = [
       ChangeRequestModel(
         id="chg_001",
@@ -317,10 +330,13 @@ async def seed_database():
         approvals="manager_001, tech_lead_001",
       ),
     ]
-    session.add_all(changes)
+    for chg in changes:
+      if chg.id not in existing_changes:
+        session.add(chg)
     await session.flush()
-    print("[OK] Created 3 change requests")
+    print("[OK] Ensured 3 change requests")
 
+    existing_requests = {req.id for req in (await session.execute(__import__('sqlalchemy').select(ServiceRequestModel))).scalars().all()}
     requests = [
       ServiceRequestModel(
         id="req_001",
@@ -378,10 +394,13 @@ async def seed_database():
         created_at=datetime.utcnow() - timedelta(days=3),
       ),
     ]
-    session.add_all(requests)
+    for req in requests:
+      if req.id not in existing_requests:
+        session.add(req)
     await session.flush()
-    print("[OK] Created 4 service requests")
+    print("[OK] Ensured 4 service requests")
 
+    existing_notifs = {notif.id for notif in (await session.execute(__import__('sqlalchemy').select(NotificationModel))).scalars().all()}
     notifications = [
       NotificationModel(
         id="notif_001",
@@ -430,10 +449,13 @@ async def seed_database():
         read_at=datetime.utcnow() - timedelta(hours=2),
       ),
     ]
-    session.add_all(notifications)
+    for notif in notifications:
+      if notif.id not in existing_notifs:
+        session.add(notif)
     await session.flush()
-    print("[OK] Created 4 notifications")
+    print("[OK] Ensured 4 notifications")
 
+    existing_search = {search.id for search in (await session.execute(__import__('sqlalchemy').select(SearchIndexModel))).scalars().all()}
     search_indexes = [
       SearchIndexModel(
         id="search_001",
@@ -472,10 +494,13 @@ async def seed_database():
         search_metadata='{"status": "PENDING", "priority": "HIGH"}',
       ),
     ]
-    session.add_all(search_indexes)
+    for search in search_indexes:
+      if search.id not in existing_search:
+        session.add(search)
     await session.flush()
-    print("[OK] Created 4 search indexes")
+    print("[OK] Ensured 4 search indexes")
 
+    existing_audit = {audit.id for audit in (await session.execute(__import__('sqlalchemy').select(AuditLogModel))).scalars().all()}
     audit_logs = [
       AuditLogModel(
         id="audit_001",
@@ -532,9 +557,11 @@ async def seed_database():
         created_at=datetime.utcnow() - timedelta(hours=4),
       ),
     ]
-    session.add_all(audit_logs)
+    for audit in audit_logs:
+      if audit.id not in existing_audit:
+        session.add(audit)
     await session.flush()
-    print("[OK] Created 6 audit logs")
+    print("[OK] Ensured 6 audit logs")
 
     await session.commit()
     print("\n[SUCCESS] Database seeding completed successfully!")
