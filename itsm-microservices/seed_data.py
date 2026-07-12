@@ -58,6 +58,7 @@ async def seed_database():
     await session.flush()
     print("[OK] Ensured 3 technicians")
 
+    existing_slas = {sla.id for sla in (await session.execute(__import__('sqlalchemy').select(SLAModel))).scalars().all()}
     slas = [
       SLAModel(
         id="sla_001",
@@ -87,10 +88,13 @@ async def seed_database():
         resolution_time_minutes=0,
       ),
     ]
-    session.add_all(slas)
+    for sla in slas:
+      if sla.id not in existing_slas:
+        session.add(sla)
     await session.flush()
-    print("[OK] Created 3 SLAs")
+    print("[OK] Ensured 3 SLAs")
 
+    existing_incidents = {inc.id for inc in (await session.execute(__import__('sqlalchemy').select(IncidentModel))).scalars().all()}
     incidents = [
       IncidentModel(
         id="inc_001",
@@ -156,9 +160,11 @@ async def seed_database():
         closed_at=datetime.utcnow() - timedelta(days=1),
       ),
     ]
-    session.add_all(incidents)
+    for incident in incidents:
+      if incident.id not in existing_incidents:
+        session.add(incident)
     await session.flush()
-    print("[OK] Created 5 incidents")
+    print("[OK] Ensured 5 incidents")
 
     work_notes = [
       WorkNoteModel(
