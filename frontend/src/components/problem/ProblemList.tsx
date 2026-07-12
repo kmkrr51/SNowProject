@@ -8,6 +8,7 @@ import Button from "@/components/common/Button";
 import Card from "@/components/common/Card";
 import Table from "@/components/common/Table";
 import Badge from "@/components/common/Badge";
+import { formatDate } from "@/utils/dateFormatter";
 
 interface ProblemListProps {
   onCreateClick: () => void;
@@ -62,7 +63,7 @@ const ProblemList: React.FC<ProblemListProps> = ({ onCreateClick, onProblemClick
     {
       key: "createdAt",
       header: "Created",
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value: string) => formatDate(value),
     },
   ];
 

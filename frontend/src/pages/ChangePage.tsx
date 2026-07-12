@@ -10,6 +10,7 @@ import Table from "@/components/common/Table";
 import Badge from "@/components/common/Badge";
 import CreateChangeModal from "@/components/change/CreateChangeModal";
 import { useChangesData } from "@/hooks/useChangesData";
+import { formatDate } from "@/utils/dateFormatter";
 
 const ChangePage: React.FC = () => {
   useChangesData();
@@ -73,7 +74,7 @@ const ChangePage: React.FC = () => {
     {
       key: "createdAt",
       header: "Created",
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value: string) => formatDate(value),
     },
   ];
 

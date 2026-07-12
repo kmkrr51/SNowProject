@@ -8,6 +8,7 @@ import Button from "@/components/common/Button";
 import Card from "@/components/common/Card";
 import Table from "@/components/common/Table";
 import Badge from "@/components/common/Badge";
+import { formatDate } from "@/utils/dateFormatter";
 
 interface IncidentListProps {
   onCreateClick: () => void;
@@ -78,7 +79,7 @@ const IncidentList: React.FC<IncidentListProps> = ({ onCreateClick, onIncidentCl
     {
       key: "createdAt",
       header: "Created",
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value: string) => formatDate(value),
     },
   ];
 

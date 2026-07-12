@@ -10,6 +10,7 @@ import Table from "@/components/common/Table";
 import Badge from "@/components/common/Badge";
 import CreateRequestModal from "@/components/request/CreateRequestModal";
 import { useRequestsData } from "@/hooks/useRequestsData";
+import { formatDate } from "@/utils/dateFormatter";
 
 const RequestPage: React.FC = () => {
   useRequestsData();
@@ -73,7 +74,7 @@ const RequestPage: React.FC = () => {
     {
       key: "createdAt",
       header: "Created",
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value: string) => formatDate(value),
     },
   ];
 
