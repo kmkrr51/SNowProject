@@ -38,11 +38,16 @@ export const createIncident = createAsyncThunk(
   "incidents/createIncident",
   async (data: any, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post<Incident>(
+      const createResponse = await apiClient.post<{ id: string; message: string }>(
         "/incidents",
         data,
       );
-      return response.data;
+      const incidentId = createResponse.data.id;
+
+      const getResponse = await apiClient.get<Incident>(
+        `/incidents/${incidentId}`,
+      );
+      return getResponse.data;
     } catch (error: any) {
       return rejectWithValue(
         error.message || "Failed to create incident",

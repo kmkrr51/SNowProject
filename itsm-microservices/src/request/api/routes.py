@@ -44,7 +44,7 @@ async def get_session():
     yield session
 
 
-@router.post("", response_model=ServiceRequestResponse, status_code=201)
+@router.post("", response_model=dict, status_code=201)
 async def create_service_request(
   request: CreateServiceRequestRequest,
   session: AsyncSession = Depends(get_session),
@@ -65,42 +65,7 @@ async def create_service_request(
     request_id = await handler.handle(command)
     await session.commit()
 
-    get_handler = GetServiceRequestQueryHandler(repository)
-    get_query = GetServiceRequestQuery(request_id=request_id)
-    req = await get_handler.handle(get_query)
-
-    if not req:
-      raise HTTPException(status_code=500, detail="Failed to retrieve created request")
-
-    tasks = [
-      TaskInfo(
-        name=t["name"],
-        description=t["description"],
-        status=t["status"],
-        created_at=t["created_at"],
-        completed_at=t.get("completed_at"),
-      )
-      for t in req.tasks
-    ]
-
-    return ServiceRequestResponse(
-      id=req.request_id,
-      request_type=req.request_type,
-      title=req.title.value,
-      description=req.description.value,
-      status=req.status,
-      requester=str(req.requester),
-      requested_service=req.requested_service,
-      priority=req.priority,
-      assigned_to=req.assigned_to,
-      fulfillment_details=req.fulfillment_details,
-      tasks=tasks,
-      created_at=req.created_at.value,
-      updated_at=req.updated_at.value,
-      fulfilled_at=req.fulfilled_at,
-      closed_at=req.closed_at,
-      progress=req.get_progress(),
-    )
+    return {"id": request_id, "message": "Service request created successfully"}
   except ValueError as e:
     await session.rollback()
     raise HTTPException(status_code=400, detail=str(e))

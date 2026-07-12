@@ -57,7 +57,7 @@ async def get_session():
     yield session
 
 
-@router.post("", response_model=ProblemResponse, status_code=201)
+@router.post("", response_model=dict, status_code=201)
 async def create_problem(
   request: CreateProblemRequest,
   session: AsyncSession = Depends(get_session),
@@ -75,26 +75,7 @@ async def create_problem(
     problem_id = await handler.handle(command)
     await session.commit()
 
-    get_handler = GetProblemQueryHandler(repository)
-    get_query = GetProblemQuery(problem_id=problem_id)
-    problem = await get_handler.handle(get_query)
-
-    if not problem:
-      raise HTTPException(status_code=500, detail="Failed to retrieve created problem")
-
-    return ProblemResponse(
-      id=problem.problem_id,
-      title=problem.title.value,
-      description=problem.description.value,
-      status=problem.status.value,
-      root_cause=problem.root_cause,
-      created_by=str(problem.created_by),
-      created_at=problem.created_at.value,
-      updated_at=problem.updated_at.value,
-      resolved_at=problem.resolved_at,
-      related_incidents=problem.related_incidents,
-      impacted_services=problem.impacted_services,
-    )
+    return {"id": problem_id, "message": "Problem created successfully"}
   except ValueError as e:
     await session.rollback()
     raise HTTPException(status_code=400, detail=str(e))
