@@ -119,7 +119,7 @@ async def list_incidents(
       limit=limit,
       offset=offset,
     )
-    result = await handler.handle(query)
+    incidents_list = await handler.handle(query)
 
     incidents = [
       IncidentResponse(
@@ -137,12 +137,12 @@ async def list_incidents(
         resolved_at=incident.resolved_at,
         closed_at=incident.closed_at,
       )
-      for incident in result.get("incidents", [])
+      for incident in incidents_list
     ]
 
     return IncidentListResponse(
       incidents=incidents,
-      total=result.get("total", 0),
+      total=len(incidents_list),
       limit=limit,
       offset=offset,
     )

@@ -134,7 +134,7 @@ async def list_problems(
       limit=limit,
       offset=offset,
     )
-    result = await handler.handle(query)
+    problems_list = await handler.handle(query)
 
     problems = [
       ProblemResponse(
@@ -150,12 +150,12 @@ async def list_problems(
         related_incidents=problem.related_incidents,
         impacted_services=problem.impacted_services,
       )
-      for problem in result.get("problems", [])
+      for problem in problems_list
     ]
 
     return ProblemListResponse(
       problems=problems,
-      total=result.get("total", 0),
+      total=len(problems_list),
       limit=limit,
       offset=offset,
     )

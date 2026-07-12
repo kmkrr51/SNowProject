@@ -146,7 +146,7 @@ async def list_changes(
       limit=limit,
       offset=offset,
     )
-    result = await handler.handle(query)
+    changes_list = await handler.handle(query)
 
     changes = [
       ChangeResponse(
@@ -174,12 +174,12 @@ async def list_changes(
           for a in change.approvals
         ],
       )
-      for change in result.get("changes", [])
+      for change in changes_list
     ]
 
     return ChangeListResponse(
       changes=changes,
-      total=result.get("total", 0),
+      total=len(changes_list),
       limit=limit,
       offset=offset,
     )

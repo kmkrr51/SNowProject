@@ -146,7 +146,7 @@ async def list_service_requests(
       limit=limit,
       offset=offset,
     )
-    result = await handler.handle(query)
+    requests_list = await handler.handle(query)
 
     requests = [
       ServiceRequestResponse(
@@ -176,12 +176,12 @@ async def list_service_requests(
         closed_at=req.closed_at,
         progress=req.get_progress(),
       )
-      for req in result.get("requests", [])
+      for req in requests_list
     ]
 
     return ServiceRequestListResponse(
       requests=requests,
-      total=result.get("total", 0),
+      total=len(requests_list),
       limit=limit,
       offset=offset,
     )
