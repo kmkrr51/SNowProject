@@ -1,14 +1,16 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
 
 class CreateServiceRequestRequest(BaseModel):
-  request_type: str = Field(..., description="STANDARD, EMERGENCY, NORMAL")
+  model_config = ConfigDict(populate_by_name=True)
+
+  request_type: str = Field(..., alias="requestType", description="STANDARD, EMERGENCY, NORMAL")
   title: str = Field(..., min_length=1, max_length=255)
   description: str = Field(..., min_length=1, max_length=2000)
   requester: str = Field(..., min_length=1)
-  requested_service: str = Field(..., min_length=1)
+  requested_service: str = Field(..., alias="requestedService", min_length=1)
   priority: str = Field(..., description="HIGH, MEDIUM, LOW")
 
 

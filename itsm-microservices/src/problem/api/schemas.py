@@ -1,12 +1,14 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
 
 class CreateProblemRequest(BaseModel):
+  model_config = ConfigDict(populate_by_name=True)
+
   title: str = Field(..., min_length=1, max_length=255)
   description: str = Field(..., min_length=1, max_length=2000)
-  created_by: str = Field(..., min_length=1)
+  created_by: str = Field(..., alias="createdBy", min_length=1)
 
 
 class StartRCARequest(BaseModel):

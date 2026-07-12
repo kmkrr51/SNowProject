@@ -1,14 +1,16 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
 
 class CreateChangeRequest(BaseModel):
+  model_config = ConfigDict(populate_by_name=True)
+
   title: str = Field(..., min_length=1, max_length=255)
   description: str = Field(..., min_length=1, max_length=2000)
-  change_type: str = Field(..., description="STANDARD, EMERGENCY, NORMAL")
-  risk_level: str = Field(..., description="HIGH, MEDIUM, LOW")
-  created_by: str = Field(..., min_length=1)
+  change_type: str = Field(..., alias="changeType", description="STANDARD, EMERGENCY, NORMAL")
+  risk_level: str = Field(..., alias="riskLevel", description="HIGH, MEDIUM, LOW")
+  created_by: str = Field(..., alias="createdBy", min_length=1)
 
 
 class SetImpactAssessmentRequest(BaseModel):
