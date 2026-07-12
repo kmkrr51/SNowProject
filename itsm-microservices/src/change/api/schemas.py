@@ -51,14 +51,17 @@ class ChangeResponse(BaseModel):
   rollback_plan: Optional[str] = None
   implementation_schedule: Optional[datetime] = None
   created_by: str
-  created_at: datetime
-  updated_at: datetime
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None
   implemented_at: Optional[datetime] = None
   rolled_back_at: Optional[datetime] = None
   approvals: List[ApprovalInfo] = []
 
   class Config:
     from_attributes = True
+    json_encoders = {
+      datetime: lambda v: v.isoformat() if v else None
+    }
 
 
 class ChangeListResponse(BaseModel):

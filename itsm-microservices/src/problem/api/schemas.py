@@ -38,14 +38,17 @@ class ProblemResponse(BaseModel):
   status: str
   root_cause: Optional[str] = None
   created_by: str
-  created_at: datetime
-  updated_at: datetime
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None
   resolved_at: Optional[datetime] = None
   related_incidents: List[str] = []
   impacted_services: List[str] = []
 
   class Config:
     from_attributes = True
+    json_encoders = {
+      datetime: lambda v: v.isoformat() if v else None
+    }
 
 
 class KnownErrorResponse(BaseModel):
@@ -55,11 +58,14 @@ class KnownErrorResponse(BaseModel):
   temporary_fix: str
   permanent_fix: str
   status: str
-  created_at: datetime
-  updated_at: datetime
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None
 
   class Config:
     from_attributes = True
+    json_encoders = {
+      datetime: lambda v: v.isoformat() if v else None
+    }
 
 
 class ProblemListResponse(BaseModel):

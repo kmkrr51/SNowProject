@@ -36,13 +36,16 @@ class IncidentResponse(BaseModel):
   urgency_level: str
   assigned_to: Optional[str] = None
   created_by: str
-  created_at: datetime
-  updated_at: datetime
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None
   resolved_at: Optional[datetime] = None
   closed_at: Optional[datetime] = None
 
   class Config:
     from_attributes = True
+    json_encoders = {
+      datetime: lambda v: v.isoformat() if v else None
+    }
 
 
 class IncidentListResponse(BaseModel):

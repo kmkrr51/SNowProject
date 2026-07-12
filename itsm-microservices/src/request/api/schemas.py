@@ -49,14 +49,17 @@ class ServiceRequestResponse(BaseModel):
   assigned_to: Optional[str] = None
   fulfillment_details: Optional[str] = None
   tasks: List[TaskInfo] = []
-  created_at: datetime
-  updated_at: datetime
+  created_at: Optional[datetime] = None
+  updated_at: Optional[datetime] = None
   fulfilled_at: Optional[datetime] = None
   closed_at: Optional[datetime] = None
   progress: float = 0.0
 
   class Config:
     from_attributes = True
+    json_encoders = {
+      datetime: lambda v: v.isoformat() if v else None
+    }
 
 
 class ServiceRequestListResponse(BaseModel):
